@@ -28,4 +28,25 @@ describe('PersonasService', () => {
     expect(typeof persona.id).toBe('string');
     expect(persona.nombre).toBe('Juan');
   });
+
+  it('findAll devuelve las personas agregadas', () => {
+    service.create({
+      nombre: 'Juan',
+      rut: '12345678-9',
+      fechaNacimiento: '1990-01-01',
+      ciudad: 'Antofagasta',
+    });
+    service.create({
+      nombre: 'Ana',
+      rut: '98765432-1',
+      fechaNacimiento: '1995-05-05',
+      ciudad: 'Santiago',
+    });
+
+    const personas = service.findAll();
+
+    expect(personas).toHaveLength(2);
+    expect(personas[0].nombre).toBe('Juan');
+    expect(personas[1].nombre).toBe('Ana');
+  });
 });

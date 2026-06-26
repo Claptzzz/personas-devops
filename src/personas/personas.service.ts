@@ -18,4 +18,8 @@ export class PersonasService {
     this.personas.push(persona);
     return persona;
   }
+
+  findAll(): Persona[] {
+    return this.personas;
+  }
 }
