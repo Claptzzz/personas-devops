@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { CreatePersonaDto } from './dto/create-persona.dto';
 import { Persona } from './entities/persona.entity';
 
@@ -6,15 +7,15 @@ import { Persona } from './entities/persona.entity';
 export class PersonasService {
   private personas: Persona[] = [];
 
-  create(createPersonaDto: CreatePersonaDto) {
-    return 'This action adds a new persona';
-  }
-
-  findAll() {
-    return `This action returns all personas`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} persona`;
+  create(dto: CreatePersonaDto): Persona {
+    const persona: Persona = {
+      id: randomUUID(),
+      nombre: dto.nombre,
+      rut: dto.rut,
+      fechaNacimiento: dto.fechaNacimiento,
+      ciudad: dto.ciudad,
+    };
+    this.personas.push(persona);
+    return persona;
   }
 }

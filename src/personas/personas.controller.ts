@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { PersonasService } from './personas.service';
 import { CreatePersonaDto } from './dto/create-persona.dto';
 
@@ -9,15 +9,5 @@ export class PersonasController {
   @Post()
   create(@Body() createPersonaDto: CreatePersonaDto) {
     return this.personasService.create(createPersonaDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.personasService.findAll();
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.personasService.remove(+id);
   }
 }
