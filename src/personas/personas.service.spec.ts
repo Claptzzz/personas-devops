@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PersonasService } from './personas.service';
 
@@ -48,5 +49,23 @@ describe('PersonasService', () => {
     expect(personas).toHaveLength(2);
     expect(personas[0].nombre).toBe('Juan');
     expect(personas[1].nombre).toBe('Ana');
+  });
+
+  it('remove elimina una persona existente', () => {
+    const persona = service.create({
+      nombre: 'Juan',
+      rut: '12345678-9',
+      fechaNacimiento: '1990-01-01',
+      ciudad: 'Antofagasta',
+    });
+
+    const eliminada = service.remove(persona.id);
+
+    expect(eliminada.id).toBe(persona.id);
+    expect(service.findAll()).toHaveLength(0);
+  });
+
+  it('remove lanza NotFoundException con id inexistente', () => {
+    expect(() => service.remove('id-inexistente')).toThrow(NotFoundException);
   });
 });
