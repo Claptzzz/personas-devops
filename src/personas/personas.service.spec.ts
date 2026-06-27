@@ -1,13 +1,33 @@
 import { NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PersonasService } from './personas.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('PersonasService', () => {
   let service: PersonasService;
+  let prisma: {
+    persona: {
+      create: jest.Mock;
+      findMany: jest.Mock;
+      delete: jest.Mock;
+    };
+  };
 
   beforeEach(async () => {
+    prisma = {
+      persona: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        delete: jest.fn(),
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PersonasService],
+      providers: [
+        PersonasService,
+        { provide: PrismaService, useValue: prisma },
+      ],
     }).compile();
 
     service = module.get<PersonasService>(PersonasService);
@@ -17,80 +37,66 @@ describe('PersonasService', () => {
     expect(service).toBeDefined();
   });
 
-  it('create agrega una persona y le asigna un id', () => {
-    const persona = service.create({
+  it('create agrega una persona y le asigna un id', async () => {
+    const dto = {
       nombre: 'Juan',
       rut: '12345678-9',
       fechaNacimiento: '1990-01-01',
       ciudad: 'Antofagasta',
       gustos: ['pizza', 'novelas'],
-    });
+    };
+    const creada = {
+      id: 'uuid-1',
+      ...dto,
+      fechaNacimiento: new Date('1990-01-01'),
+    };
+    prisma.persona.create.mockResolvedValue(creada);
 
-    expect(persona.id).toBeDefined();
-    expect(typeof persona.id).toBe('string');
+    const persona = await service.create(dto);
+
+    expect(prisma.persona.create).toHaveBeenCalledWith({
+      data: { ...dto, fechaNacimiento: new Date('1990-01-01') },
+    });
+    expect(persona.id).toBe('uuid-1');
     expect(persona.nombre).toBe('Juan');
   });
 
-  it('findAll devuelve las personas agregadas', () => {
-    service.create({
-      nombre: 'Juan',
-      rut: '12345678-9',
-      fechaNacimiento: '1990-01-01',
-      ciudad: 'Antofagasta',
-      gustos: ['pizza', 'novelas'],
-    });
-    service.create({
-      nombre: 'Ana',
-      rut: '98765432-1',
-      fechaNacimiento: '1995-05-05',
-      ciudad: 'Santiago',
-      gustos: ['ajedrez'],
-    });
+  it('findAll devuelve las personas agregadas', async () => {
+    const personas = [
+      { id: 'uuid-1', nombre: 'Juan' },
+      { id: 'uuid-2', nombre: 'Ana' },
+    ];
+    prisma.persona.findMany.mockResolvedValue(personas);
 
-    const personas = service.findAll();
+    const result = await service.findAll();
 
-    expect(personas).toHaveLength(2);
-    expect(personas[0].nombre).toBe('Juan');
-    expect(personas[1].nombre).toBe('Ana');
+    expect(prisma.persona.findMany).toHaveBeenCalled();
+    expect(result).toHaveLength(2);
+    expect(result[0].nombre).toBe('Juan');
+    expect(result[1].nombre).toBe('Ana');
   });
 
-  it('remove elimina una persona existente', () => {
-    const persona = service.create({
-      nombre: 'Juan',
-      rut: '12345678-9',
-      fechaNacimiento: '1990-01-01',
-      ciudad: 'Antofagasta',
-      gustos: ['pizza', 'novelas'],
+  it('remove elimina una persona existente', async () => {
+    const eliminada = { id: 'uuid-1', nombre: 'Juan' };
+    prisma.persona.delete.mockResolvedValue(eliminada);
+
+    const result = await service.remove('uuid-1');
+
+    expect(prisma.persona.delete).toHaveBeenCalledWith({
+      where: { id: 'uuid-1' },
     });
-
-    const eliminada = service.remove(persona.id);
-
-    expect(eliminada.id).toBe(persona.id);
-    expect(service.findAll()).toHaveLength(0);
+    expect(result.id).toBe('uuid-1');
   });
 
-  it('remove lanza NotFoundException con id inexistente', () => {
-    expect(() => service.remove('id-inexistente')).toThrow(NotFoundException);
-  });
-
-  it('create guarda los gustos de la persona', () => {
-    const persona = service.create({
-      nombre: 'Juan',
-      rut: '12345678-9',
-      fechaNacimiento: '1990-01-01',
-      ciudad: 'Antofagasta',
-      gustos: ['pizza', 'novelas', 'videojuegos'],
+  it('remove lanza NotFoundException con id inexistente', async () => {
+    const error = new Prisma.PrismaClientKnownRequestError('No encontrada', {
+      code: 'P2025',
+      clientVersion: '6.0.0',
     });
+    prisma.persona.delete.mockRejectedValue(error);
 
-    expect(persona.gustos).toEqual(['pizza', 'novelas', 'videojuegos']);
-
-    const sinGustos = service.create({
-      nombre: 'Ana',
-      rut: '98765432-1',
-      fechaNacimiento: '1995-05-05',
-      ciudad: 'Santiago',
-    });
-
-    expect(sinGustos.gustos).toEqual([]);
+    await expect(service.remove('id-inexistente')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

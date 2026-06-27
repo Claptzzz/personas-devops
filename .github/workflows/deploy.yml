@@ -1,4 +1,4 @@
-name: Build, Test y Deploy a Azure
+name: CI - Build y Test
 
 on:
   push:
@@ -6,12 +6,8 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  AZURE_WEBAPP_NAME: personas-devops
-  NODE_VERSION: '22.x'
-
 jobs:
-  build-and-deploy:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,25 +15,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22.x'
           cache: 'npm'
 
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Correr tests (CI)
+      - name: Correr tests
         run: npm test
 
       - name: Compilar
         run: npm run build
-
-      - name: Quitar dependencias de desarrollo
-        run: npm prune --omit=dev
-
-      - name: Deploy a Azure App Service
-        if: github.ref == 'refs/heads/main'
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
