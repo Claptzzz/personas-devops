@@ -4,3 +4,5 @@
 *.log
 coverage/
 .DS_Store
+
+/generated/prisma

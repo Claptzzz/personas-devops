@@ -1,35 +1,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreatePersonaDto } from './dto/create-persona.dto';
-import { Persona } from './entities/persona.entity';
 
 @Injectable()
 export class PersonasService {
-  private personas: Persona[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreatePersonaDto): Persona {
-    const persona: Persona = {
-      id: randomUUID(),
-      nombre: dto.nombre,
-      rut: dto.rut,
-      fechaNacimiento: dto.fechaNacimiento,
-      ciudad: dto.ciudad,
-      gustos: dto.gustos ?? [],
-    };
-    this.personas.push(persona);
-    return persona;
+  create(dto: CreatePersonaDto) {
+    return this.prisma.persona.create({
+      data: {
+        ...dto,
+        fechaNacimiento: new Date(dto.fechaNacimiento),
+      },
+    });
   }
 
-  findAll(): Persona[] {
-    return this.personas;
+  findAll() {
+    return this.prisma.persona.findMany();
   }
 
-  remove(id: string): Persona {
-    const index = this.personas.findIndex((persona) => persona.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Persona con id ${id} no encontrada`);
+  async remove(id: string) {
+    try {
+      return await this.prisma.persona.delete({ where: { id } });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Persona con id ${id} no encontrada`);
+      }
+      throw error;
     }
-    const [persona] = this.personas.splice(index, 1);
-    return persona;
   }
 }
