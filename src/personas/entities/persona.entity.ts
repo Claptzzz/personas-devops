@@ -4,4 +4,5 @@ export interface Persona {
   rut: string;
   fechaNacimiento: string; // ISO 'YYYY-MM-DD'
   ciudad: string;
+  gustos: string[];
 }

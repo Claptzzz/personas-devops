@@ -1,4 +1,10 @@
-import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreatePersonaDto {
   @IsString()
@@ -15,4 +21,9 @@ export class CreatePersonaDto {
   @IsString()
   @IsNotEmpty()
   ciudad: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  gustos?: string[];
 }

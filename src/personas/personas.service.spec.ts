@@ -23,6 +23,7 @@ describe('PersonasService', () => {
       rut: '12345678-9',
       fechaNacimiento: '1990-01-01',
       ciudad: 'Antofagasta',
+      gustos: ['pizza', 'novelas'],
     });
 
     expect(persona.id).toBeDefined();
@@ -36,12 +37,14 @@ describe('PersonasService', () => {
       rut: '12345678-9',
       fechaNacimiento: '1990-01-01',
       ciudad: 'Antofagasta',
+      gustos: ['pizza', 'novelas'],
     });
     service.create({
       nombre: 'Ana',
       rut: '98765432-1',
       fechaNacimiento: '1995-05-05',
       ciudad: 'Santiago',
+      gustos: ['ajedrez'],
     });
 
     const personas = service.findAll();
@@ -57,6 +60,7 @@ describe('PersonasService', () => {
       rut: '12345678-9',
       fechaNacimiento: '1990-01-01',
       ciudad: 'Antofagasta',
+      gustos: ['pizza', 'novelas'],
     });
 
     const eliminada = service.remove(persona.id);
@@ -67,5 +71,26 @@ describe('PersonasService', () => {
 
   it('remove lanza NotFoundException con id inexistente', () => {
     expect(() => service.remove('id-inexistente')).toThrow(NotFoundException);
+  });
+
+  it('create guarda los gustos de la persona', () => {
+    const persona = service.create({
+      nombre: 'Juan',
+      rut: '12345678-9',
+      fechaNacimiento: '1990-01-01',
+      ciudad: 'Antofagasta',
+      gustos: ['pizza', 'novelas', 'videojuegos'],
+    });
+
+    expect(persona.gustos).toEqual(['pizza', 'novelas', 'videojuegos']);
+
+    const sinGustos = service.create({
+      nombre: 'Ana',
+      rut: '98765432-1',
+      fechaNacimiento: '1995-05-05',
+      ciudad: 'Santiago',
+    });
+
+    expect(sinGustos.gustos).toEqual([]);
   });
 });
